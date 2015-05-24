@@ -74,7 +74,7 @@ class icon(QLabel):
 		
 class foldericon(icon):
 	def __init__(self,page,name):
-		super(foldericon,self).__init__(page,name,'/home/aakash/folder.png')
+		super(foldericon,self).__init__(page,name,'folder.png')
 	def gotclickedevent(self,event):
 		super(foldericon,self).gotclickedevent(event)
 	def doubleclickevent(self):
@@ -88,7 +88,7 @@ class foldericon(icon):
 
 class fileicon(icon):
 	def __init__(self,page,name):
-		super(fileicon,self).__init__(page,name,'/home/aakash/file.png')	
+		super(fileicon,self).__init__(page,name,'file.png')	
 	def contextMenuEvent(self, event):
 		#index = self.indexAt(event.pos())
 		self.menu = QMenu()
