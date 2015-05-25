@@ -3,6 +3,7 @@ from PyQt4.QtGui import  *
 from PyQt4.QtCore import *
 main=None
 abc=QApplication(sys.argv)
+
 class page(QWidget):
 	def __init__(self,add):
 		super(page,self).__init__()
@@ -13,6 +14,13 @@ class page(QWidget):
 		p.setColor(self.backgroundRole(), Qt.white)
 		self.setPalette(p)
 		self.iconlist=[]
+w=page("/Home/")
+def yo(folderpagelist,address):
+	main.clear(main.mainLayout)
+	#main.mainLayout.removeWidget(main.backbutton)
+	#main.mainLayout.removeWidget(main.scroll)
+	main.update(folderpagelist,address)
+	main.show()
 class icon(QLabel):
 	def __init__(self,page,name,imgadd):#decide whether you want to have a variable or just a common address
 		super(icon,self).__init__(page)#each icon is associated with a page
@@ -31,7 +39,37 @@ class icon(QLabel):
 		self.foldername.mouseDoubleClickEvent=self.gotclickedevent
 		self.pageadd=page.windowtitle
 		#self.installEventFilter(self)
+		self.h=QVBoxLayout()
 		
+		
+		self.txtlabel=QLabel()
+		self.txtlabel.setToolTip(name)
+
+        #txtlabel.setFixedSize(130,10)
+        #txtlabel.setStyleSheet("QWidget {background-color:blue}")
+		if len(name)>15:
+			name=name[:11]+"..."
+		self.txtlabel.setText(name)
+		self.txtlabel.setFixedSize(130,20)
+		self.txtlabel.setAlignment(Qt.AlignCenter)
+ 		self.setAlignment(Qt.AlignCenter)
+		
+		'''
+	def hiddenname():
+		i=15
+		label=QVBoxLayout()
+		label2=QLabel()
+		while ((len(self.name)-15-i)>0):
+			tmp=self.name[i:i+14]
+			
+			label2.setText(tmp)
+			label.addWidget(label2)
+			i=i+15
+		label2.setText(self.name[i:])
+		label.addWidget(label2)
+		return label
+		'''
+
 
 		#self.connect(self.foldername, SIGNAL('clicked()'), self.gotclicked)
 	def move(self,x,y):#overwriting the existing function
@@ -54,6 +92,8 @@ class icon(QLabel):
 		elif event.type()==QEvent.MouseButtonDblClick:
 			self.doubleclickevent()
 			print("just got double clicked")
+	
+
 	def leftclickevent(self):
 		pass
 
@@ -79,7 +119,9 @@ class foldericon(icon):
 		super(foldericon,self).gotclickedevent(event)
 	def doubleclickevent(self):
 		
-		main.clear(main.layout)
+		main.clear(main.mainLayout)
+		#main.mainLayout.removeWidget(main.backbutton)
+		#main.mainLayout.removeWidget(main.scroll)
 		main.update(folderpagelist,self.pageadd+self.name+"/")
 		
 
@@ -132,21 +174,28 @@ class Main(QMainWindow):
             super(Main, self).__init__(parent)
             self.centralWidget=QWidget()
             self.setCentralWidget(self.centralWidget)
+
             self.mainLayout=QGridLayout()
             self.container=QWidget()
             self.scroll=QScrollArea()
             self.layout=QGridLayout()
-            
+            self.backicon=QIcon()
+            a=QSize(90,90)
+            self.backicon.addFile('back.png',a,QIcon.Normal,QIcon.On)
     def update(self,folderpagelist,address):
-    	self.centralWidget=QWidget()
-        self.setCentralWidget(self.centralWidget)
-        self.mainLayout=QGridLayout()
-        self.container=QWidget()
-        self.scroll=QScrollArea()
-        self.layout=QGridLayout()
-    	
+    	tmplist={}
+    	for a,b in folderpagelist.items():
+    		tmplist.update({a:b})
+    	print address
+    	self.layout=QGridLayout()
+    	self.container=QWidget()
+    	self.scroll=QScrollArea()
+    	self.layout=QGridLayout()
+    	self.backbutton=QPushButton(self.backicon,"Back",self.centralWidget)
+    	self.backbutton.setFixedSize(60,24)
+    	self.backbutton.clicked.connect(self.lp)
+    	###
     	folderpagelist[address].setLayout(self.layout)
-    	
     	self.ad=address
     	k=0
     	j=0
@@ -181,25 +230,39 @@ class Main(QMainWindow):
                 h.addStretch(1)
                 w.addItem(h,*position)
                 '''
-            	  
-        	self.h=QVBoxLayout()
-        	txtlabel=QLabel()
-        	txtlabel.setText(icon.name)
-        	self.h.addWidget(txtlabel)
-       
-        	self.layout.addItem(self.h,*position2)
-        		
+        	overall=QVBoxLayout()
+        	icon.h.addWidget(icon.txtlabel)	  
+        	overall.addWidget(icon)
+        	overall.addWidget(icon.txtlabel)
 
-        	self.layout.addWidget(icon,*position)
-        
+        	#txtlabel.move(0,100)
+        	#self.h.addStretch(2)
+       
+        	#self.layout.addItem(self.h,*position2)
+
+        	#self.layout.addWidget(txtlabel)
+        	#icon.setFixedSize(130,20)	
+
+        	self.layout.addItem(overall,*position)
+
+        	
+        	
         self.container.setLayout(self.layout)
         
         self.scroll.setWidget(self.container)
+        self.mainLayout.addWidget(self.backbutton)
         self.mainLayout.addWidget(self.scroll)
         self.centralWidget.setLayout(self.mainLayout)    
-        self.centralWidget.setMinimumSize(600,600)
+        #self.centralWidget.setMaximumSize(600,600)
         
-        
+    def lp(self):
+    	
+    	i=self.ad[:-1].rfind("/")
+    	yo(folderpagelist,self.ad[:i+1])
+    	#main.clear(main.layout)
+    	#main.update(folderpagelist,self.ad[:i+1])
+    	#main.show()
+    	    
 
     def clear(self,layout):
     	'''
@@ -227,7 +290,7 @@ class Main(QMainWindow):
   
 #class fileicon()
 
-w=page("/Home/")
+
 #imgadd='/home/trueutkarsh/Pictures/downloadfolderfinal.png'
 folderpagelist={}
 folderpagelist.update({"/Home/":w})
@@ -236,9 +299,11 @@ makebrowser("/home/dir/Pictures/final1.png",folderpagelist,w)
 makebrowser("/home/dir/DC/final.png",folderpagelist,w)
 makebrowser("/home/dir/DC/final.png",folderpagelist,w)
 makebrowser("/home/dir/machaya/final2.png",folderpagelist,w)
-makebrowser("/home/dir/DC++/final3.png",folderpagelist,w)
+makebrowser("/home/dir/DC++dsafsdaasdfsagfdgdgsd/final3.png",folderpagelist,w)
 makebrowser("/home/dir/DC++/yisfskl.png",folderpagelist,w)
-
+makebrowser("/home/dir/DC2++/yisfskl.png",folderpagelist,w)
+makebrowser("/home/dir/DC3++/yisfskl.png",folderpagelist,w)
+makebrowser("/home/dir/yisfskl.png",folderpagelist,w)
 main=Main(folderpagelist,"/Home/")
 main.update(folderpagelist,"/Home/")
 main.show()
