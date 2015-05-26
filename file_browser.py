@@ -16,26 +16,28 @@ except:
 class clipboard:
 	string=''
 #This code is to get any new icons or directories created in cloud storage.
-def process_list():
-	for a,b in folderpagelist.items():
-		for c in b.iconlist:
-			if b.windowtitle+c.name not in saved_list.keys():
-				saved_list.update({b.windowtitle+c.name:None})
-				pickle.dump(saved_list,open('workfile.pkl','wb'))
+	@staticmethod
+	def process_list():
+		for a,b in folderpagelist.items():
+			for c in b.iconlist:
+				if b.windowtitle+c.name not in saved_list.keys():
+					saved_list.update({b.windowtitle+c.name:None})
+					pickle.dump(saved_list,open('workfile.pkl','wb'))
 #This function is to change the folderpagelist according to data saved 
 #in saved_list.	
-def process_folderpagelist():
-	for a,b in saved_list.items():
-		if b!=None:
-			i=a.rfind("/")
-			srcname=a[i+1:]
-			srcdirname=a[:i+1]
-			j=b.rfind("/")
-			dstdirname=b[:j+1]			
-			for k in folderpagelist[srcdirname].iconlist:
-				if k.name==srcname:
-					folderpagelist[dstdirname].iconlist.append(k)
-					folderpagelist[srcdirname].iconlist.remove(k)
+	@staticmethod
+	def process_folderpagelist():
+		for a,b in saved_list.items():
+			if b!=None:
+				i=a.rfind("/")
+				srcname=a[i+1:]
+				srcdirname=a[:i+1]
+				j=b.rfind("/")
+				dstdirname=b[:j+1]			
+				for k in folderpagelist[srcdirname].iconlist:
+					if k.name==srcname:
+						folderpagelist[dstdirname].iconlist.append(k)
+						folderpagelist[srcdirname].iconlist.remove(k)
 	
 def yo(folderpagelist,address):
 	main.clear(main.mainLayout)
@@ -55,6 +57,8 @@ class page(QWidget):
 		self.iconlist=[]
 		
 	def paste(self):
+		if clipboard.string=='':
+			return
 		i=clipboard.string.rfind('/')
 		name=(clipboard.string)[i+1:]
 		rname=(clipboard.string)[:i+1]
@@ -66,6 +70,7 @@ class page(QWidget):
 		dest=self.windowtitle+name
 		#code to update saved list after pasting.
 		saved_list[clipboard.string]=dest
+		clipboard.string=''
 		pickle.dump(saved_list,open('workfile.pkl','wb'))
 		#code to remove icon from source
 		for a in folderpagelist[rname].iconlist:
@@ -325,18 +330,12 @@ class Main(QMainWindow):
 		
 		i=self.ad[:-1].rfind("/")
 		yo(folderpagelist,self.ad[:i+1])
-		#main.clear(main.layout)
-		#main.update(folderpagelist,self.ad[:i+1])
-		#main.show()
+		#Here the paste option is triggered.
 	def contextMenuEvent(self, event):
 		#index = self.indexAt(event.pos())
 		self.menu = QMenu()
-		#renameAction = QAction('Exit',self)
-		#Download = QAction('Download',self)
 		paste = QAction('Paste',self)
-		#renameAction.triggered.connect(download)
 		paste.triggered.connect(folderpagelist[self.pageadd].paste)
-		#self.menu.addAction(Download)
 		self.menu.addAction(paste)
 		self.menu.popup(QCursor.pos())
 	def mousePressEvent(self,event):
@@ -381,17 +380,17 @@ makebrowser("/home/dir/DC/final.png",folderpagelist,w)
 makebrowser("/home/dir/DC/final.png",folderpagelist,w)
 makebrowser("/home/dir/machaya/final2.png",folderpagelist,w)
 makebrowser("/home/dir/DC++dsafsdaasdfsagfdgdgsd/final3.png",folderpagelist,w)
-makebrowser("/home/dir/DC++/yisfskl.png",folderpagelist,w)
-makebrowser("/home/dir/DC2++/yisfskl.png",folderpagelist,w)
-makebrowser("/home/dir/DC3++/yisfskl.png",folderpagelist,w)
+makebrowser("/home/dir/DC++/yisfskl1.png",folderpagelist,w)
+makebrowser("/home/dir/DC2++/yisfskl2.png",folderpagelist,w)
+makebrowser("/home/dir/DC3++/yisfskl3.png",folderpagelist,w)
 makebrowser("/home/dir/yisfskl.png",folderpagelist,w)
-process_list()
-process_folderpagelist()
+clipboard.process_list()
+clipboard.process_folderpagelist()
 
 main=Main(folderpagelist,"/Home/")
 main.update(folderpagelist,"/Home/")
 main.show()
-process_folderpagelist()
+
 sys.exit(abc.exec_())
 '''
 for x,y in folderpagelist.items():
