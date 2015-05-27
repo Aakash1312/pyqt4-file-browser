@@ -47,6 +47,7 @@ class clipboard:
 						folderpagelist[srcdirname].iconlist.remove(k)
 	
 def yo(folderpagelist,address):
+	print "yes"
 	main.clear(main.mainLayout)
 	#main.mainLayout.removeWidget(main.backbutton)
 	#main.mainLayout.removeWidget(main.scroll)
@@ -64,7 +65,11 @@ class page(QWidget):
 		self.setPalette(p)
 		'''
 		self.iconlist=[]
-		
+	def newfolder(self):
+		tmpfolder=foldericon(self,"Untitled")
+		tmpfolder.is_new=True
+		self.iconlist.append(tmpfolder)
+		yo(folderpagelist,self.windowtitle)
 	def paste(self):
 		if clipboard.string=='':
 			return
@@ -124,17 +129,17 @@ class icon(QLabel):
 		self.foldername.mousePressEvent=self.gotclickedevent
 		self.mouseDoubleClickEvent = self.gotclickedevent
 		self.foldername.mouseDoubleClickEvent=self.gotclickedevent
-		self.pageadd=page.windowtitle
+		self.ad=page.windowtitle
 		self.page=page
 		self.icon_isselected=False
 		self.permanent_srcadd=self.page.windowtitle+name
 		#self.installEventFilter(self)
 		self.h=QVBoxLayout()
-		
-		
 		self.txtlabel=QLabel()
 		self.txtlabel.setToolTip(name)
-
+		self.is_new=False
+		self.new_label=QLineEdit()
+		self.new_label.returnPressed.connect(self.new_fol)
 		#txtlabel.setFixedSize(130,10)
 		#txtlabel.setStyleSheet("QWidget {background-color:blue}")
 		if len(name)>15:
@@ -143,7 +148,14 @@ class icon(QLabel):
 		self.txtlabel.setFixedSize(130,20)
 		self.txtlabel.setAlignment(Qt.AlignCenter)
  		self.setAlignment(Qt.AlignCenter)
-		
+	def new_fol(self):
+		self.new_label.hide()
+		txt=self.new_label.text()
+		self.name=str(txt)
+		self.txtlabel.setText(self.name)
+		new_page=page(self.page.windowtitle+self.name+"/")
+		folderpagelist.update({self.page.windowtitle+self.name+"/":new_page})
+		yo(folderpagelist,self.page.windowtitle)
 		'''
 	def hiddenname():
 		i=15
@@ -205,7 +217,7 @@ class icon(QLabel):
 	def doubleclickevent(self):
 		'''
 		main.clear(main.layout)
-		main.update(folderpagelist,self.pageadd+self.name+"/")
+		main.update(folderpagelist,self.ad+self.name+"/")
 		
 		main.show()	
 		'''
@@ -216,6 +228,7 @@ class icon(QLabel):
 	'''
 		
 class foldericon(icon):
+
 	def __init__(self,page,name):
 		super(foldericon,self).__init__(page,name,'folder.png')
 	def gotclickedevent(self,event):
@@ -225,7 +238,7 @@ class foldericon(icon):
 		main.clear(main.mainLayout)
 		#main.mainLayout.removeWidget(main.backbutton)
 		#main.mainLayout.removeWidget(main.scroll)
-		main.update(folderpagelist,self.pageadd+self.name+"/")
+		main.update(folderpagelist,self.ad+self.name+"/")
 		
 
 		main.show()	
@@ -310,7 +323,7 @@ class Main(QMainWindow):
 		for a,b in folderpagelist.items():
 			tmplist.update({a:b})
 
-		self.pageadd=address
+		self.ad=address
 		self.layout=QGridLayout()
 		self.container=QWidget()
 		'''
@@ -360,10 +373,18 @@ class Main(QMainWindow):
 			h.addStretch(1)
 			w.addItem(h,*position)
 			'''
+
 			overall=QVBoxLayout()
-			icon.h.addWidget(icon.txtlabel)	  
 			overall.addWidget(icon)
-			overall.addWidget(icon.txtlabel)
+			if  icon.is_new==False:
+				icon.h.addWidget(icon.txtlabel)
+				overall.addWidget(icon.txtlabel)
+			else:
+				icon.h.addWidget(icon.new_label)
+				overall.addWidget(icon.new_label)
+				icon.is_new=False	  
+			
+			
 
 			#txtlabel.move(0,100)
 			#self.h.addStretch(2)
@@ -394,8 +415,11 @@ class Main(QMainWindow):
 		#index = self.indexAt(event.pos())
 		self.menu = QMenu()
 		paste = QAction('Paste',self)
-		paste.triggered.connect(folderpagelist[self.pageadd].paste)
+		paste.triggered.connect(folderpagelist[self.ad].paste)
 		self.menu.addAction(paste)
+		new = QAction('New Folder',self)
+		new.triggered.connect(folderpagelist[self.ad].newfolder)
+		self.menu.addAction(new)
 		self.menu.popup(QCursor.pos())
 	def mousePressEvent(self,event):
 
