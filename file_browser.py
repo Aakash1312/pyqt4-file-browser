@@ -15,6 +15,7 @@ except:
 	saved_list=pickle.load(open('workfile.pkl','rb'))	
 class clipboard:
 	string=''
+	permanent_string=''
 #This code is to get any new icons or directories created in cloud storage.
 	@staticmethod
 	def process_list():
@@ -22,7 +23,7 @@ class clipboard:
 			for c in b.iconlist:
 				if b.windowtitle+c.name not in saved_list.keys():
 					saved_list.update({b.windowtitle+c.name:None})
-					pickle.dump(saved_list,open('workfile.pkl','wb'))
+		pickle.dump(saved_list,open('workfile.pkl','wb'))
 #This function is to change the folderpagelist according to data saved 
 #in saved_list.	
 	@staticmethod
@@ -36,7 +37,13 @@ class clipboard:
 				dstdirname=b[:j+1]			
 				for k in folderpagelist[srcdirname].iconlist:
 					if k.name==srcname:
-						folderpagelist[dstdirname].iconlist.append(k)
+						newicon=fileicon(folderpagelist[dstdirname],srcname)
+						newicon.permanent_srcadd=srcdirname+srcname
+						print 200
+						print dstdirname
+						print srcdirname
+						print 200
+						folderpagelist[dstdirname].iconlist.append(newicon)
 						folderpagelist[srcdirname].iconlist.remove(k)
 	
 def yo(folderpagelist,address):
@@ -51,31 +58,52 @@ class page(QWidget):
 		self.windowtitle=add
 		self.setWindowTitle(add)
 		self.resize(500,500)
+		'''
 		p = self.palette()
 		p.setColor(self.backgroundRole(), Qt.white)
 		self.setPalette(p)
+		'''
 		self.iconlist=[]
 		
 	def paste(self):
 		if clipboard.string=='':
 			return
-		i=clipboard.string.rfind('/')
-		name=(clipboard.string)[i+1:]
-		rname=(clipboard.string)[:i+1]
-		tmpicon=fileicon(self,name)
+		if clipboard.string[-1]!="/":
+			i=clipboard.string.rfind('/')
+			name=(clipboard.string)[i+1:]
+			rname=(clipboard.string)[:i+1]
+			tmpicon=fileicon(self,name)
+			tmpicon.permanent_srcadd=clipboard.permanent_string.strip()
+			permanent_string=''
+			print tmpicon.permanent_srcadd
+		else:
+			i=clipboard.string[:-2].rfind('/')
+			name=(clipboard.string)[i+1:-1]
+			rname=(clipboard.string)[:i+1]
+			tmpicon=foldericon(self,name)
+			for a,b in folderpagelist.items():
+				if a==clipboard.string:
+					folderpagelist[self.windowtitle+name+"/"]=b
+					del folderpagelist[a]
 		self.iconlist.append(tmpicon)
 		#yo to update the screen after pasting
 		yo(folderpagelist,self.windowtitle)
 		#dest=destination where file has to be pasted.
 		dest=self.windowtitle+name
+
 		#code to update saved list after pasting.
-		saved_list[clipboard.string]=dest
+		saved_list[clipboard.permanent_string]=dest
+		print "starts here"
+		print clipboard.string
+		print dest
 		clipboard.string=''
 		pickle.dump(saved_list,open('workfile.pkl','wb'))
 		#code to remove icon from source
-		for a in folderpagelist[rname].iconlist:
-			if a.name==name:
-				folderpagelist[rname].iconlist.remove(a)
+		print rname
+		for  l in folderpagelist[rname].iconlist:
+			print l.name
+			if l.name==name:
+				folderpagelist[rname].iconlist.remove(l)
 				break
 
 w=page("/Home/")
@@ -98,6 +126,8 @@ class icon(QLabel):
 		self.foldername.mouseDoubleClickEvent=self.gotclickedevent
 		self.pageadd=page.windowtitle
 		self.page=page
+		self.icon_isselected=False
+		self.permanent_srcadd=self.page.windowtitle+name
 		#self.installEventFilter(self)
 		self.h=QVBoxLayout()
 		
@@ -131,9 +161,7 @@ class icon(QLabel):
 		'''
 	# This function simply gives clipboard the source address.	
 	def cut(self):
-		src=self.page.windowtitle+self.name
-		
-		clipboard.string=src.strip()
+		pass
 
 		
 		
@@ -163,7 +191,14 @@ class icon(QLabel):
 	
 
 	def leftclickevent(self):
-		pass
+		modifiers = QApplication.keyboardModifiers()
+		if modifiers == Qt.ControlModifier:
+			self.icon_isselected=True
+			self.setPixmap(self.icon2.pixmap(128,QIcon.Selected,QIcon.On))
+			self.show()
+		else:
+			self.setPixmap(self.icon2.pixmap(128,QIcon.Normal,QIcon.On))
+			self.show()
 
 	def rightclickevent(self):
 		pass			
@@ -174,11 +209,11 @@ class icon(QLabel):
 		
 		main.show()	
 		'''
-
+	'''
 	def show(self):
 		super(foldericon,self).show()
 		self.foldername.show()	
-
+	'''
 		
 class foldericon(icon):
 	def __init__(self,page,name):
@@ -195,7 +230,21 @@ class foldericon(icon):
 
 		main.show()	
 	#define leftclickevent,rightclickevent,doubleclickevent
-
+	def contextMenuEvent(self, event):
+		#index = self.indexAt(event.pos())
+		self.menu = QMenu()
+		renameAction = QAction('Exit',self)
+		Download = QAction('Download',self)
+		Cut = QAction('Cut',self)
+		#renameAction.triggered.connect(download)
+		Cut.triggered.connect(self.cut)
+		self.menu.addAction(Download)
+		self.menu.addAction(Cut)
+		self.menu.popup(QCursor.pos())
+	def cut(self):
+		src=self.page.windowtitle+self.name+"/"
+		print src
+		clipboard.string=src.strip()
 class fileicon(icon):
 	def __init__(self,page,name):
 		super(fileicon,self).__init__(page,name,'file.png')	
@@ -210,6 +259,9 @@ class fileicon(icon):
 		self.menu.addAction(Download)
 		self.menu.addAction(Cut)
 		self.menu.popup(QCursor.pos())
+	def cut(self):
+		clipboard.permanent_string=self.permanent_srcadd.strip()
+		clipboard.string=self.page.windowtitle+self.name
 
 	#define leftclickevent,rightclickevent,doubleclickevent
 def makebrowser(address,folderpagelist,currpage):
@@ -245,7 +297,7 @@ class Main(QMainWindow):
 			super(Main, self).__init__(parent)
 			self.centralWidget=QWidget()
 			self.setCentralWidget(self.centralWidget)
-
+			self.centralWidget.setMinimumSize(600,600)
 			self.mainLayout=QGridLayout()
 			self.container=QWidget()
 			self.scroll=QScrollArea()
@@ -257,9 +309,16 @@ class Main(QMainWindow):
 		tmplist={}
 		for a,b in folderpagelist.items():
 			tmplist.update({a:b})
+
 		self.pageadd=address
 		self.layout=QGridLayout()
 		self.container=QWidget()
+		'''
+		p = self.container.palette()
+		p.setColor(self.backgroundRole(), Qt.white)
+		self.container.setPalette(p)
+		self.container.setMinimumSize(600,600)
+		'''
 		self.scroll=QScrollArea()
 		self.layout=QGridLayout()
 		self.backbutton=QPushButton(self.backicon,"Back",self.centralWidget)
@@ -319,11 +378,11 @@ class Main(QMainWindow):
 			
 			
 		self.container.setLayout(self.layout)
-		
 		self.scroll.setWidget(self.container)
 		self.mainLayout.addWidget(self.backbutton)
 		self.mainLayout.addWidget(self.scroll)
-		self.centralWidget.setLayout(self.mainLayout)	
+		self.centralWidget.setLayout(self.mainLayout)
+
 		#self.centralWidget.setMaximumSize(600,600)
 		
 	def lp(self):
