@@ -28,23 +28,34 @@ class clipboard:
 #in saved_list.	
 	@staticmethod
 	def process_folderpagelist():
+	#Make all new folders
+		for i in saved_list.keys():
+			if i[-1]=="/":
+				tmppage=page(i)
+				folderpagelist.update({i:tmppage})
+	#Assign icons to new folders.
+		for i in saved_list.keys():
+			if i[-1]=="/":
+				j=i[:-2].rfind("/")
+				name=i[j+1:-1]
+				rname=i[:j]+"/"
+				if rname in folderpagelist.keys():
+					icon=foldericon(folderpagelist[rname],name)
+					folderpagelist[rname].iconlist.append(icon)
 		for a,b in saved_list.items():
 			if b!=None:
 				i=a.rfind("/")
 				srcname=a[i+1:]
 				srcdirname=a[:i+1]
 				j=b.rfind("/")
-				dstdirname=b[:j+1]			
-				for k in folderpagelist[srcdirname].iconlist:
-					if k.name==srcname:
-						newicon=fileicon(folderpagelist[dstdirname],srcname)
-						newicon.permanent_srcadd=srcdirname+srcname
-						print 200
-						print dstdirname
-						print srcdirname
-						print 200
-						folderpagelist[dstdirname].iconlist.append(newicon)
-						folderpagelist[srcdirname].iconlist.remove(k)
+				dstdirname=b[:j+1]
+				if srcdirname in folderpagelist.keys():				
+					for k in folderpagelist[srcdirname].iconlist:
+						if k.name==srcname:
+							newicon=fileicon(folderpagelist[dstdirname],srcname)
+							newicon.permanent_srcadd=srcdirname+srcname
+							folderpagelist[dstdirname].iconlist.append(newicon)
+							folderpagelist[srcdirname].iconlist.remove(k)
 	
 def yo(folderpagelist,address):
 	print "yes"
@@ -154,6 +165,8 @@ class icon(QLabel):
 		self.name=str(txt)
 		self.txtlabel.setText(self.name)
 		new_page=page(self.page.windowtitle+self.name+"/")
+		saved_list.update({self.page.windowtitle+self.name+"/":None})
+		pickle.dump(saved_list,open('workfile.pkl','wb'))
 		folderpagelist.update({self.page.windowtitle+self.name+"/":new_page})
 		yo(folderpagelist,self.page.windowtitle)
 		'''
