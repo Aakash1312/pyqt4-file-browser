@@ -1,5 +1,6 @@
 # pyqt4-file-browser
 It is a simple file browser made in pyqt4. Just give the addresses of files and it will automatically create corresponding directories and folder structure and provide you with graphical file browsing interface. You can give multiple file addresses.
+Also basic operations like making a new folder, moving files etc. are also implemented in GUI.
 
 **Prerequisites:**
 * python 2.7 
